@@ -1,0 +1,12 @@
+[project]
+name = "shortcut-learning-project"
+version = "0.1.0"
+description = "Skin lesion dataset downloads for shortcut learning research"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "kaggle",
+]
+
+[tool.uv]
+package = false
