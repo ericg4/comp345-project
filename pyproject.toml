@@ -18,5 +18,13 @@ dependencies = [
     "tqdm",
 ]
 
+[project.optional-dependencies]
+vlm = [
+    "transformers==4.57.1",
+    "peft==0.17.1",
+    "accelerate==1.11.0",
+    "safetensors==0.6.2",
+]
+
 [tool.uv]
 package = false
