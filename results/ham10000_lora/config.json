@@ -1,0 +1,22 @@
+{
+  "model_id": "HuggingFaceTB/SmolVLM-500M-Instruct",
+  "seed": 42,
+  "epochs": 5,
+  "batch_size": 8,
+  "accumulation": 2,
+  "lora_rank": 8,
+  "learning_rate": 0.0001,
+  "prompt": "<|im_start|>User:<image>Classify this skin lesion. A: nevus. B: melanoma. Answer only A or B.<end_of_utterance>\nAssistant:",
+  "answer_token_ids": [
+    49,
+    50
+  ],
+  "label2id": {
+    "nv": 0,
+    "mel": 1
+  },
+  "class_weights": [
+    0.583065390586853,
+    3.5096774101257324
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "accuracy": 0.7846930193439865,
+  "balanced_accuracy": 0.8067489900952785,
+  "macro_f1": 0.6908853087653448,
+  "melanoma_recall": 0.8373493975903614,
+  "melanoma_precision": 0.37771739130434784,
+  "nevus_specificity": 0.7761485826001955,
+  "roc_auc": 0.8736411923353236,
+  "pr_auc_average_precision": 0.5596590320832039,
+  "confusion_matrix_nv_mel": [
+    [
+      794,
+      229
+    ],
+    [
+      27,
+      139
+    ]
+  ],
+  "melanoma_prevalence": 0.13961312026913372
+}

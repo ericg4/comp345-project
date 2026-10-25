@@ -2,3 +2,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+.DS_Store
+
+# Local model weights, tokenizers, raw archives, and execution provenance.
+/artifacts/

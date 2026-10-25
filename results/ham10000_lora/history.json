@@ -1,0 +1,112 @@
+[
+  {
+    "epoch": 1,
+    "train_loss": 1.442229545258862,
+    "accuracy": 0.8696383515559294,
+    "balanced_accuracy": 0.6798466762708376,
+    "macro_f1": 0.7018155283412372,
+    "melanoma_recall": 0.4127906976744186,
+    "melanoma_precision": 0.568,
+    "nevus_specificity": 0.9469026548672567,
+    "roc_auc": 0.8628604422492054,
+    "pr_auc_average_precision": 0.4962421745944199,
+    "confusion_matrix_nv_mel": [
+      [
+        963,
+        54
+      ],
+      [
+        101,
+        71
+      ]
+    ]
+  },
+  {
+    "epoch": 2,
+    "train_loss": 0.5406251719906269,
+    "accuracy": 0.3423044575273339,
+    "balanced_accuracy": 0.615535889872173,
+    "macro_f1": 0.34045278885931707,
+    "melanoma_recall": 1.0,
+    "melanoma_precision": 0.18029350104821804,
+    "nevus_specificity": 0.23107177974434612,
+    "roc_auc": 0.871798609681919,
+    "pr_auc_average_precision": 0.5201455084520453,
+    "confusion_matrix_nv_mel": [
+      [
+        235,
+        782
+      ],
+      [
+        0,
+        172
+      ]
+    ]
+  },
+  {
+    "epoch": 3,
+    "train_loss": 0.5047641596647308,
+    "accuracy": 0.8233809924306139,
+    "balanced_accuracy": 0.7880651025588256,
+    "macro_f1": 0.7188479623824451,
+    "melanoma_recall": 0.7383720930232558,
+    "melanoma_precision": 0.4349315068493151,
+    "nevus_specificity": 0.8377581120943953,
+    "roc_auc": 0.8821059431524547,
+    "pr_auc_average_precision": 0.5490678400511044,
+    "confusion_matrix_nv_mel": [
+      [
+        852,
+        165
+      ],
+      [
+        45,
+        127
+      ]
+    ]
+  },
+  {
+    "epoch": 4,
+    "train_loss": 0.5192985336772193,
+    "accuracy": 0.8040370058873002,
+    "balanced_accuracy": 0.7864186732523839,
+    "macro_f1": 0.7027771072380737,
+    "melanoma_recall": 0.7616279069767442,
+    "melanoma_precision": 0.4055727554179567,
+    "nevus_specificity": 0.8112094395280236,
+    "roc_auc": 0.8879056047197641,
+    "pr_auc_average_precision": 0.5771598445692633,
+    "confusion_matrix_nv_mel": [
+      [
+        825,
+        192
+      ],
+      [
+        41,
+        131
+      ]
+    ]
+  },
+  {
+    "epoch": 5,
+    "train_loss": 0.46376316737150775,
+    "accuracy": 0.7695542472666106,
+    "balanced_accuracy": 0.7976606983604309,
+    "macro_f1": 0.6807872293727562,
+    "melanoma_recall": 0.8372093023255814,
+    "melanoma_precision": 0.36923076923076925,
+    "nevus_specificity": 0.7581120943952803,
+    "roc_auc": 0.8921703139649219,
+    "pr_auc_average_precision": 0.6020602125063711,
+    "confusion_matrix_nv_mel": [
+      [
+        771,
+        246
+      ],
+      [
+        28,
+        144
+      ]
+    ]
+  }
+]

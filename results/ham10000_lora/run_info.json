@@ -1,0 +1,12 @@
+{
+  "elapsed_seconds": 3088.587530851364,
+  "gpu": "Tesla T4",
+  "peak_gpu_memory_gb": 2.2404465675354004,
+  "versions": {
+    "torch": "2.11.0+cu130",
+    "transformers": "4.57.1",
+    "peft": "0.17.1",
+    "scikit-learn": "1.7.2",
+    "pandas": "2.2.3"
+  }
+}
