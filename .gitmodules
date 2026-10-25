@@ -1,0 +1,4 @@
+[submodule "third_party/PanDerm"]
+	path = third_party/PanDerm
+	url = https://github.com/SiyuanYan1/PanDerm
+	ignore = untracked

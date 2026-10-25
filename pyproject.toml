@@ -1,11 +1,21 @@
 [project]
 name = "shortcut-learning-project"
 version = "0.1.0"
-description = "Skin lesion dataset downloads for shortcut learning research"
+description = "Shortcut learning in skin lesion classifiers: CNN vs. PanDerm vs. VLM"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "kaggle",
+    "gdown",
+    "numpy",
+    "pandas",
+    "pillow",
+    "scikit-learn",
+    "torch",
+    "torchvision",
+    # Pinned to the version PanDerm's classification code was written against.
+    "timm==0.9.16",
+    "tqdm",
 ]
 
 [tool.uv]

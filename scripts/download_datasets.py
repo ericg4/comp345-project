@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download selected skin lesion datasets (Python 3.9+, standard library)."""
+"""Download selected skin lesion datasets and pretrained model weights."""
 
 import argparse
 import hashlib
@@ -35,6 +35,9 @@ FILES = {
         ),
     ],
 }
+# PanDerm ViT-L/16 checkpoint from the paper (github.com/SiyuanYan1/PanDerm).
+PANDERM_DRIVE_ID = "1SwEzaOlFV_gBKf2UzeowMC8z9UH7AQbE"
+PANDERM_FILENAME = "panderm_ll_data6_checkpoint-499.pth"
 CHUNK_SIZE = 1024 * 1024
 
 
@@ -109,6 +112,23 @@ def download_ham10000(destination, force=False):
     print(f"Saved: {destination}", flush=True)
 
 
+def download_panderm(destination, force=False):
+    if destination.exists() and not force:
+        print(f"Already downloaded: {destination}", flush=True)
+        return
+    try:
+        import gdown
+    except ImportError as error:
+        raise RuntimeError("PanDerm weights require gdown. Install with 'uv sync'.") from error
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".gdown-", dir=destination.parent) as tmp:
+        partial = Path(tmp) / destination.name
+        if gdown.download(id=PANDERM_DRIVE_ID, output=str(partial), quiet=False) is None:
+            raise RuntimeError("Google Drive download failed; fetch the checkpoint manually (see README.md).")
+        partial.replace(destination)
+    print(f"Saved: {destination}", flush=True)
+
+
 def extract_archive(path):
     destination = path.parent / path.stem
     root = destination.resolve()
@@ -130,21 +150,26 @@ def main(argv=None):
     parser.add_argument("--ham10000", action="store_true", help="Kaggle HAM10000 images and metadata")
     parser.add_argument("--scholarsmine", action="store_true", help="All three ISIC 2019 artifact mask ZIPs")
     parser.add_argument("--dermartifactdb", action="store_true", help="Zenodo DermArtifactDB (record 18324962)")
-    parser.add_argument("--all", action="store_true", help="Download all three datasets")
+    parser.add_argument("--panderm", action="store_true", help="PanDerm ViT-L/16 pretrained checkpoint")
+    parser.add_argument("--all", action="store_true", help="Download all datasets and weights")
     parser.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parents[1] / "data",
                         help="Destination directory (default: project data/)")
     parser.add_argument("--extract", action="store_true", help="Extract ZIPs into folders named after each archive; retain ZIPs")
     parser.add_argument("--force", action="store_true", help="Download again, replacing existing ZIPs after validation")
     parser.add_argument("--dry-run", action="store_true", help="Show selection and destinations without downloading")
     args = parser.parse_args(argv)
-    selected = [name for name in ("ham10000", "scholarsmine", "dermartifactdb")
+    selected = [name for name in ("ham10000", "scholarsmine", "dermartifactdb", "panderm")
                 if args.all or getattr(args, name)]
     if not selected:
-        parser.error("select --ham10000, --scholarsmine, --dermartifactdb, or --all")
+        parser.error("select --ham10000, --scholarsmine, --dermartifactdb, --panderm, or --all")
     failures = 0
     for name in selected:
-        files = ([("skin-cancer-mnist-ham10000.zip", f"kaggle:{KAGGLE_DATASET}", None)]
-                 if name == "ham10000" else FILES[name])
+        if name == "ham10000":
+            files = [("skin-cancer-mnist-ham10000.zip", f"kaggle:{KAGGLE_DATASET}", None)]
+        elif name == "panderm":
+            files = [(PANDERM_FILENAME, f"gdrive:{PANDERM_DRIVE_ID}", None)]
+        else:
+            files = FILES[name]
         for filename, url, checksum in files:
             destination = args.output_dir.expanduser() / name / filename
             print(f"{name}: {url}\n  -> {destination}", flush=True)
@@ -153,6 +178,9 @@ def main(argv=None):
             try:
                 if name == "ham10000":
                     download_ham10000(destination, args.force)
+                elif name == "panderm":
+                    download_panderm(destination, args.force)
+                    continue  # A checkpoint, not an archive.
                 else:
                     download_file(url, destination, checksum, args.force)
                 if args.extract:
