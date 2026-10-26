@@ -1,0 +1,31 @@
+{
+  "elapsed_seconds": 580.2015733718872,
+  "gpu": "Tesla T4",
+  "command": [
+    "/usr/bin/python3",
+    "-u",
+    "scripts/mask_ablation.py",
+    "--masks",
+    "data/scholarsmine/ISIC_2019_HairMask",
+    "--allow-combined-mask",
+    "--ink-masks",
+    "data/scholarsmine/ISIC_2019_Inkmark_Masks",
+    "--vignetting-masks",
+    "data/scholarsmine/ISIC_2019_Vignetting_Masks (1)",
+    "--data-dir",
+    "/kaggle/input/skin-cancer-mnist-ham10000",
+    "--output-dir",
+    "results/smolvlm_mask_ablation",
+    "--artifacts-dir",
+    "artifacts/smolvlm_mask_ablation"
+  ],
+  "versions": {
+    "torch": "2.11.0+cu130",
+    "transformers": "4.57.1",
+    "peft": "0.17.1",
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "scikit-learn": "1.7.2",
+    "opencv-python-headless": "4.14.0.94"
+  }
+}

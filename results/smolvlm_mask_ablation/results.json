@@ -1,0 +1,575 @@
+{
+  "status": "completed",
+  "mask_source": "https://scholarsmine.mst.edu/research_data/15/",
+  "masks": {
+    "hair_ruler": "data/scholarsmine/ISIC_2019_HairMask",
+    "ink": "data/scholarsmine/ISIC_2019_Inkmark_Masks",
+    "vignetting": "data/scholarsmine/ISIC_2019_Vignetting_Masks (1)"
+  },
+  "model_id": "HuggingFaceTB/SmolVLM-500M-Instruct",
+  "prompt": "<|im_start|>User:<image>Classify this skin lesion. A: nevus. B: melanoma. Answer only A or B.<end_of_utterance>\nAssistant:",
+  "device": "cuda",
+  "compute_dtype": "torch.float16",
+  "image_size": {
+    "longest_edge": 512
+  },
+  "methods": [
+    "occlusion",
+    "inpaint"
+  ],
+  "mask_type": "Separate published hair/ruler-union, ink, and vignetting masks",
+  "hair_and_ruler_separated": false,
+  "selection": "Original model test split; aligned, nonempty published masks, separately for each mask type",
+  "missing_masks": "Excluded, never inferred to be artifact-negative",
+  "mask_dilation_native_pixels": 1,
+  "mask_binarization": "Binary 0/1/255 retained; grayscale 0..255 thresholded at 128",
+  "inpaint_method": "OpenCV Telea, radius 3",
+  "occlusion_fill": "per-image median RGB outside the target mask; identical fill for its control",
+  "control": "same-area circular translation, minimum overlap of 64 seeded candidates",
+  "threshold": 0.5,
+  "seed": 42,
+  "bootstrap_repeats": 2000,
+  "bootstrap_unit": "lesion",
+  "conditions_in_preview_order": [
+    "original",
+    "occlusion",
+    "sham_occlusion",
+    "inpaint",
+    "sham_inpaint"
+  ],
+  "original_test_images": 1189,
+  "excluded_mask_records": 2289,
+  "source_mask_counts": {
+    "hair_ruler": 1189,
+    "ink": 6,
+    "vignetting": 104
+  },
+  "adapter_sha256": "361b96ac34cb8e78848908018776ce8965c6cf67cf3bf9997f51f2677a18ff7f",
+  "cohort_sha256": "0bff940b8b17c618853c63ff0eeec77ec832d9d1ed805d90c32c30de4261b61a",
+  "grayscale_conversion": "Opaque RGB/RGBA with channel spread <=32 converted to luminance",
+  "results": {
+    "hair_ruler": {
+      "n_images": 1170,
+      "n_lesions": 896,
+      "n_melanoma": 164,
+      "n_nevus": 1006,
+      "status": "evaluated",
+      "conditions": {
+        "inpaint": {
+          "accuracy": 0.729059829059829,
+          "macro_f1": 0.6503923647932132,
+          "f1": {
+            "nv": 0.816231884057971,
+            "mel": 0.4845528455284553
+          },
+          "balanced_accuracy": 0.8041688891043981,
+          "auroc": 0.8910045822625223,
+          "confusion_matrix": [
+            [
+              704,
+              302
+            ],
+            [
+              15,
+              149
+            ]
+          ],
+          "mean_melanoma_score_change": 0.06684057036052561,
+          "prediction_flip_rate": 0.1170940170940171,
+          "accuracy_drop": 0.05897435897435897,
+          "accuracy_drop_ci95": [
+            0.03784577412073445,
+            0.08080169754355636
+          ],
+          "correct_to_wrong": 103,
+          "wrong_to_correct": 34
+        },
+        "occlusion": {
+          "accuracy": 0.7239316239316239,
+          "macro_f1": 0.638411732793437,
+          "f1": {
+            "nv": 0.8142610695802185,
+            "mel": 0.46256239600665555
+          },
+          "balanced_accuracy": 0.7756691557969257,
+          "auroc": 0.8447849488435242,
+          "confusion_matrix": [
+            [
+              708,
+              298
+            ],
+            [
+              25,
+              139
+            ]
+          ],
+          "mean_melanoma_score_change": 0.07908843447231394,
+          "prediction_flip_rate": 0.18205128205128204,
+          "accuracy_drop": 0.0641025641025641,
+          "accuracy_drop_ci95": [
+            0.039292265279320414,
+            0.08912048600912069
+          ],
+          "correct_to_wrong": 144,
+          "wrong_to_correct": 69
+        },
+        "original": {
+          "accuracy": 0.788034188034188,
+          "macro_f1": 0.6942452865976253,
+          "f1": {
+            "nv": 0.8635863586358636,
+            "mel": 0.524904214559387
+          },
+          "balanced_accuracy": 0.8078419725549144,
+          "auroc": 0.8758515977306891,
+          "confusion_matrix": [
+            [
+              785,
+              221
+            ],
+            [
+              27,
+              137
+            ]
+          ],
+          "mean_melanoma_score_change": 0.0,
+          "prediction_flip_rate": 0.0,
+          "accuracy_drop": 0.0,
+          "accuracy_drop_ci95": [
+            0.0,
+            0.0
+          ],
+          "correct_to_wrong": 0,
+          "wrong_to_correct": 0
+        },
+        "sham_inpaint": {
+          "accuracy": 0.7692307692307693,
+          "macro_f1": 0.6766711974322023,
+          "f1": {
+            "nv": 0.8496659242761693,
+            "mel": 0.5036764705882353
+          },
+          "balanced_accuracy": 0.7969075789167435,
+          "auroc": 0.8782336468990932,
+          "confusion_matrix": [
+            [
+              763,
+              243
+            ],
+            [
+              27,
+              137
+            ]
+          ],
+          "mean_melanoma_score_change": 0.011413397340593526,
+          "prediction_flip_rate": 0.035897435897435895,
+          "accuracy_drop": 0.018803418803418803,
+          "accuracy_drop_ci95": [
+            0.007772020725388601,
+            0.029838022165387893
+          ],
+          "correct_to_wrong": 32,
+          "wrong_to_correct": 10
+        },
+        "sham_occlusion": {
+          "accuracy": 0.7094017094017094,
+          "macro_f1": 0.6181300853591574,
+          "f1": {
+            "nv": 0.8048220436280138,
+            "mel": 0.431438127090301
+          },
+          "balanced_accuracy": 0.741702225670368,
+          "auroc": 0.8317200455801775,
+          "confusion_matrix": [
+            [
+              701,
+              305
+            ],
+            [
+              35,
+              129
+            ]
+          ],
+          "mean_melanoma_score_change": 0.07127790475268171,
+          "prediction_flip_rate": 0.1829059829059829,
+          "accuracy_drop": 0.07863247863247863,
+          "accuracy_drop_ci95": [
+            0.054575890179235545,
+            0.10335922741189499
+          ],
+          "correct_to_wrong": 153,
+          "wrong_to_correct": 61
+        }
+      },
+      "additional_drop_beyond_control": {
+        "occlusion": {
+          "accuracy_drop": -0.01452991452991453,
+          "accuracy_drop_ci95": [
+            -0.039723807479885596,
+            0.010843275951717081
+          ],
+          "correct_to_wrong": 103,
+          "wrong_to_correct": 120
+        },
+        "inpaint": {
+          "accuracy_drop": 0.040170940170940174,
+          "accuracy_drop_ci95": [
+            0.02155126006118388,
+            0.05984607604937684
+          ],
+          "correct_to_wrong": 83,
+          "wrong_to_correct": 36
+        }
+      }
+    },
+    "ink": {
+      "n_images": 6,
+      "n_lesions": 6,
+      "n_melanoma": 0,
+      "n_nevus": 6,
+      "status": "evaluated",
+      "conditions": {
+        "inpaint": {
+          "accuracy": 0.5,
+          "macro_f1": null,
+          "f1": {
+            "nv": 0.6666666666666666,
+            "mel": null
+          },
+          "balanced_accuracy": null,
+          "auroc": null,
+          "confusion_matrix": [
+            [
+              3,
+              3
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "mean_melanoma_score_change": -0.09304941942294438,
+          "prediction_flip_rate": 0.16666666666666666,
+          "accuracy_drop": -0.16666666666666666,
+          "accuracy_drop_ci95": [
+            -0.5,
+            0.0
+          ],
+          "correct_to_wrong": 0,
+          "wrong_to_correct": 1
+        },
+        "occlusion": {
+          "accuracy": 0.3333333333333333,
+          "macro_f1": null,
+          "f1": {
+            "nv": 0.5,
+            "mel": null
+          },
+          "balanced_accuracy": null,
+          "auroc": null,
+          "confusion_matrix": [
+            [
+              2,
+              4
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "mean_melanoma_score_change": -0.06205098579327265,
+          "prediction_flip_rate": 0.3333333333333333,
+          "accuracy_drop": 0.0,
+          "accuracy_drop_ci95": [
+            -0.5,
+            0.5
+          ],
+          "correct_to_wrong": 1,
+          "wrong_to_correct": 1
+        },
+        "original": {
+          "accuracy": 0.3333333333333333,
+          "macro_f1": null,
+          "f1": {
+            "nv": 0.5,
+            "mel": null
+          },
+          "balanced_accuracy": null,
+          "auroc": null,
+          "confusion_matrix": [
+            [
+              2,
+              4
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "mean_melanoma_score_change": 0.0,
+          "prediction_flip_rate": 0.0,
+          "accuracy_drop": 0.0,
+          "accuracy_drop_ci95": [
+            0.0,
+            0.0
+          ],
+          "correct_to_wrong": 0,
+          "wrong_to_correct": 0
+        },
+        "sham_inpaint": {
+          "accuracy": 0.16666666666666666,
+          "macro_f1": null,
+          "f1": {
+            "nv": 0.2857142857142857,
+            "mel": null
+          },
+          "balanced_accuracy": null,
+          "auroc": null,
+          "confusion_matrix": [
+            [
+              1,
+              5
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "mean_melanoma_score_change": 0.04308054099480311,
+          "prediction_flip_rate": 0.16666666666666666,
+          "accuracy_drop": 0.16666666666666666,
+          "accuracy_drop_ci95": [
+            0.0,
+            0.5
+          ],
+          "correct_to_wrong": 1,
+          "wrong_to_correct": 0
+        },
+        "sham_occlusion": {
+          "accuracy": 0.16666666666666666,
+          "macro_f1": null,
+          "f1": {
+            "nv": 0.2857142857142857,
+            "mel": null
+          },
+          "balanced_accuracy": null,
+          "auroc": null,
+          "confusion_matrix": [
+            [
+              1,
+              5
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "mean_melanoma_score_change": 0.02265758067369461,
+          "prediction_flip_rate": 0.16666666666666666,
+          "accuracy_drop": 0.16666666666666666,
+          "accuracy_drop_ci95": [
+            0.0,
+            0.5
+          ],
+          "correct_to_wrong": 1,
+          "wrong_to_correct": 0
+        }
+      },
+      "additional_drop_beyond_control": {
+        "occlusion": {
+          "accuracy_drop": -0.16666666666666666,
+          "accuracy_drop_ci95": [
+            -0.5,
+            0.0
+          ],
+          "correct_to_wrong": 0,
+          "wrong_to_correct": 1
+        },
+        "inpaint": {
+          "accuracy_drop": -0.3333333333333333,
+          "accuracy_drop_ci95": [
+            -0.6666666666666666,
+            0.0
+          ],
+          "correct_to_wrong": 0,
+          "wrong_to_correct": 2
+        }
+      }
+    },
+    "vignetting": {
+      "n_images": 102,
+      "n_lesions": 98,
+      "n_melanoma": 34,
+      "n_nevus": 68,
+      "status": "evaluated",
+      "conditions": {
+        "inpaint": {
+          "accuracy": 0.46078431372549017,
+          "macro_f1": 0.45443936594379075,
+          "f1": {
+            "nv": 0.3956043956043956,
+            "mel": 0.5132743362831859
+          },
+          "balanced_accuracy": 0.5588235294117647,
+          "auroc": 0.7841695501730103,
+          "confusion_matrix": [
+            [
+              18,
+              50
+            ],
+            [
+              5,
+              29
+            ]
+          ],
+          "mean_melanoma_score_change": 0.023755264194572672,
+          "prediction_flip_rate": 0.19607843137254902,
+          "accuracy_drop": 0.13725490196078433,
+          "accuracy_drop_ci95": [
+            0.059391380314502036,
+            0.21782178217821782
+          ],
+          "correct_to_wrong": 17,
+          "wrong_to_correct": 3
+        },
+        "occlusion": {
+          "accuracy": 0.6568627450980392,
+          "macro_f1": 0.649277925139994,
+          "f1": {
+            "nv": 0.7008547008547008,
+            "mel": 0.5977011494252874
+          },
+          "balanced_accuracy": 0.6838235294117647,
+          "auroc": 0.7863321799307958,
+          "confusion_matrix": [
+            [
+              41,
+              27
+            ],
+            [
+              8,
+              26
+            ]
+          ],
+          "mean_melanoma_score_change": -0.1077994664254434,
+          "prediction_flip_rate": 0.2549019607843137,
+          "accuracy_drop": -0.058823529411764705,
+          "accuracy_drop_ci95": [
+            -0.15845544554455446,
+            0.040010101010100954
+          ],
+          "correct_to_wrong": 10,
+          "wrong_to_correct": 16
+        },
+        "original": {
+          "accuracy": 0.5980392156862745,
+          "macro_f1": 0.5980005767567047,
+          "f1": {
+            "nv": 0.594059405940594,
+            "mel": 0.6019417475728155
+          },
+          "balanced_accuracy": 0.6764705882352942,
+          "auroc": 0.8259083044982699,
+          "confusion_matrix": [
+            [
+              30,
+              38
+            ],
+            [
+              3,
+              31
+            ]
+          ],
+          "mean_melanoma_score_change": 0.0,
+          "prediction_flip_rate": 0.0,
+          "accuracy_drop": 0.0,
+          "accuracy_drop_ci95": [
+            0.0,
+            0.0
+          ],
+          "correct_to_wrong": 0,
+          "wrong_to_correct": 0
+        },
+        "sham_inpaint": {
+          "accuracy": 0.6078431372549019,
+          "macro_f1": 0.60723912206392,
+          "f1": {
+            "nv": 0.5918367346938775,
+            "mel": 0.6226415094339622
+          },
+          "balanced_accuracy": 0.6985294117647058,
+          "auroc": 0.8019031141868511,
+          "confusion_matrix": [
+            [
+              29,
+              39
+            ],
+            [
+              1,
+              33
+            ]
+          ],
+          "mean_melanoma_score_change": -0.0021746797742796878,
+          "prediction_flip_rate": 0.12745098039215685,
+          "accuracy_drop": -0.00980392156862745,
+          "accuracy_drop_ci95": [
+            -0.08,
+            0.05825242718446602
+          ],
+          "correct_to_wrong": 6,
+          "wrong_to_correct": 7
+        },
+        "sham_occlusion": {
+          "accuracy": 0.5784313725490197,
+          "macro_f1": 0.5783908487936171,
+          "f1": {
+            "nv": 0.5742574257425742,
+            "mel": 0.5825242718446602
+          },
+          "balanced_accuracy": 0.6544117647058824,
+          "auroc": 0.7848183391003459,
+          "confusion_matrix": [
+            [
+              29,
+              39
+            ],
+            [
+              4,
+              30
+            ]
+          ],
+          "mean_melanoma_score_change": -0.040774003401690836,
+          "prediction_flip_rate": 0.27450980392156865,
+          "accuracy_drop": 0.0196078431372549,
+          "accuracy_drop_ci95": [
+            -0.08655946601941747,
+            0.11431318681318665
+          ],
+          "correct_to_wrong": 15,
+          "wrong_to_correct": 13
+        }
+      },
+      "additional_drop_beyond_control": {
+        "occlusion": {
+          "accuracy_drop": -0.0784313725490196,
+          "accuracy_drop_ci95": [
+            -0.19612696563774024,
+            0.039603960396039604
+          ],
+          "correct_to_wrong": 15,
+          "wrong_to_correct": 23
+        },
+        "inpaint": {
+          "accuracy_drop": 0.14705882352941177,
+          "accuracy_drop_ci95": [
+            0.06,
+            0.23300970873786409
+          ],
+          "correct_to_wrong": 19,
+          "wrong_to_correct": 4
+        }
+      }
+    }
+  },
+  "interpretation": "Hair/ruler removal tests their union, not independent hair versus ruler effects. A drop can reflect artifact sensitivity or removal of lesion information; compare controls and mask quality."
+}
