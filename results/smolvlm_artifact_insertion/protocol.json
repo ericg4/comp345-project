@@ -1,0 +1,32 @@
+{
+  "status": "prepared",
+  "seed": 42,
+  "safety_margin_native_pixels": 15,
+  "protected_region": "Entire published-foreground bounding box plus 15 pixels; any foreground at an image corner excludes the case",
+  "lesion_mask_url": "https://dataverse.harvard.edu/api/access/datafile/3838943",
+  "lesion_mask_archive_md5": "6e8d252e09cfdb0189199f15985a5b84",
+  "cohort_sha256": "0bff940b8b17c618853c63ff0eeec77ec832d9d1ed805d90c32c30de4261b61a",
+  "annotations_sha256": "6994e5812f6ff2be683377949d9b114b54551e3be99062ac629be09de2252e7c",
+  "known_artifacts_sha256": "49c5237147be4c249d6c9f4bf36d95f07c1966a5fd55faf745204a2fe9fe2974",
+  "adapter_sha256": "361b96ac34cb8e78848908018776ce8965c6cf67cf3bf9997f51f2677a18ff7f",
+  "config_sha256": "ec0147b11b829b3ffc9b9df5a146a040683ea049c825cda0ea0b6ee136245277",
+  "script_sha256": "35004737887157a1049ee0e55c96612d949d5d0eec44a87adce40e0a38731684",
+  "selection": "Original model test split; DermArtifactDB ink=0 and ruler=0; exclude known published-mask ink positives; all six safe placements required",
+  "inference": "Frozen original LoRA model, prompt and saved processor; threshold 0.5; no tuning",
+  "primary": "Per-artifact mean target-minus-permutation-control logit margin (mel minus nv), averaged over three designs per image",
+  "control": "Same bounding box; deterministic permutation of RGBA tuples, preserving exact color/opacity histogram and painted area",
+  "bootstrap": "Whole-lesion cluster bootstrap, 2000 draws; marginal exploratory 95% intervals",
+  "limitation": "Synthetic overlays and noise-like controls; masks may be imperfect; test set previously explored; no independent confirmation",
+  "n_images": 914,
+  "n_conditions_per_image": 13,
+  "design_assets_sha256": {
+    "ink_0": "d75f5aa7b61bdd0b59e9c202d8ee3c1d998ba4f04d3db22b8f71d3d3dfdfd920",
+    "ink_1": "ae405c2f93470c878b29bffc45da41790d28c8a334889048bf850decbdf6f806",
+    "ink_2": "eb75142645f48252b1c9aeddb3cc790e466769af448496b18bda9b2d5df8b725",
+    "ruler_0": "82f92231a7e74fd86b83a9e26f834b33be31754c4c87759fb7ef189c311c1540",
+    "ruler_1": "8799995f424980a3d344bc0933583867c8e8b5b1772525a9807eaba8be537319",
+    "ruler_2": "3e1acfdcdd91057550c25ecd9923618320a0b3643415bc435b1e2999f6fc0255"
+  },
+  "cohort.csv_sha256": "230141c9495503f94e3f3f12f71a5dbb0a0b136c9b3ff9b3a83b4085c46b01d3",
+  "placements.csv_sha256": "b6bd9bf18e313d0aa2c7942e253b99217550a00577d4e35dc2a7fed1341469e1"
+}

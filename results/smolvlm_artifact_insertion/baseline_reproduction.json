@@ -1,0 +1,9 @@
+{
+  "n_images": 914,
+  "mean_absolute_score_difference": 0.0019260276192024823,
+  "maximum_absolute_score_difference": 0.01557710766792303,
+  "prediction_disagreements": 1,
+  "old_subset_accuracy": 0.7954048140043763,
+  "new_subset_accuracy": 0.7943107221006565,
+  "interpretation": "One baseline prediction differs from the historical run. Paired comparisons use originals rescored in this run. Numerical differences across batching/software are a plausible explanation, not an experimentally isolated cause."
+}

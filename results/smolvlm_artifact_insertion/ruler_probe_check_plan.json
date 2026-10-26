@@ -1,0 +1,26 @@
+{
+  "status": "prepared",
+  "selection": "Same 16 QA images, 8 per diagnosis, evenly spaced sorted IDs; chosen before classifier outcomes",
+  "image_ids": [
+    "ISIC_0024731",
+    "ISIC_0026082",
+    "ISIC_0027372",
+    "ISIC_0028641",
+    "ISIC_0030037",
+    "ISIC_0031393",
+    "ISIC_0032858",
+    "ISIC_0034309",
+    "ISIC_0024315",
+    "ISIC_0026369",
+    "ISIC_0028489",
+    "ISIC_0029937",
+    "ISIC_0031295",
+    "ISIC_0032806",
+    "ISIC_0033429",
+    "ISIC_0034242"
+  ],
+  "probe_sha256": "1ac1864609e65415658edc0c7d646427de4fc8ca2fe756acd3ff7b62242c0545",
+  "probe_threshold": 0.8099999999999999,
+  "source_script_sha256": "3522b11c74d0f7c02cdb82e602d8a459d43ef9d1e2bb067501cba85dd1ff3dbe",
+  "no_fitting": true
+}
