@@ -34,6 +34,14 @@ FILES = {
             "79c845cbe6bfb08be9e5e2455fd9c909",
         ),
     ],
+    # HAM10000 lesion segmentations (Tschandl et al. 2020), from the dataset's Dataverse record.
+    "ham10000_segmentations": [
+        (
+            "HAM10000_segmentations_lesion_tschandl.zip",
+            "https://dataverse.harvard.edu/api/access/datafile/3838943",
+            "6e8d252e09cfdb0189199f15985a5b84",
+        ),
+    ],
 }
 # PanDerm ViT-L/16 checkpoint from the paper (github.com/SiyuanYan1/PanDerm).
 PANDERM_DRIVE_ID = "1SwEzaOlFV_gBKf2UzeowMC8z9UH7AQbE"
@@ -150,6 +158,7 @@ def main(argv=None):
     parser.add_argument("--ham10000", action="store_true", help="Kaggle HAM10000 images and metadata")
     parser.add_argument("--scholarsmine", action="store_true", help="All three ISIC 2019 artifact mask ZIPs")
     parser.add_argument("--dermartifactdb", action="store_true", help="Zenodo DermArtifactDB (record 18324962)")
+    parser.add_argument("--ham10000-segmentations", action="store_true", help="HAM10000 lesion masks (Harvard Dataverse)")
     parser.add_argument("--panderm", action="store_true", help="PanDerm ViT-L/16 pretrained checkpoint")
     parser.add_argument("--all", action="store_true", help="Download all datasets and weights")
     parser.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parents[1] / "data",
@@ -158,10 +167,10 @@ def main(argv=None):
     parser.add_argument("--force", action="store_true", help="Download again, replacing existing ZIPs after validation")
     parser.add_argument("--dry-run", action="store_true", help="Show selection and destinations without downloading")
     args = parser.parse_args(argv)
-    selected = [name for name in ("ham10000", "scholarsmine", "dermartifactdb", "panderm")
+    selected = [name for name in ("ham10000", "scholarsmine", "dermartifactdb", "ham10000_segmentations", "panderm")
                 if args.all or getattr(args, name)]
     if not selected:
-        parser.error("select --ham10000, --scholarsmine, --dermartifactdb, --panderm, or --all")
+        parser.error("select --ham10000, --scholarsmine, --dermartifactdb, --ham10000-segmentations, --panderm, or --all")
     failures = 0
     for name in selected:
         if name == "ham10000":

@@ -14,6 +14,7 @@ nevus vs. melanoma, then probe each model's features for artifacts.
 | `scripts/panderm_features.py` | Frozen PanDerm encoder, writes features to `data/features/panderm/pretrained.npz` |
 | `scripts/cnn.py` | Trains a small CNN from scratch (`--size` sets the input size), writes `results/cnn/<size>/` and its embeddings to `data/features/cnn/<size>.npz` |
 | `scripts/linear_probe.py` | Trains a linear head on a features file, writes `probe.json` to the matching folder (`data/features/a/b.npz` → `results/a/b/`) |
+| `scripts/ink_shortcut.py` | Trains the CNN with synthetic ink planted on 50–100% of melanomas, then tests with it removed or flipped; writes `results/cnn/<size>/ink_shortcut/`. Needs `--ham10000-segmentations --extract`. |
 | `scripts/train_smolvlm.py` | Trains language LoRA adapters with the original vocabulary head on the shared split |
 | `scripts/predict_smolvlm.py` | Predicts images using saved LoRA adapters, including the preserved Colab run |
 | `results/` | Results to commit: metrics, predictions, configuration, and split records |
@@ -117,6 +118,7 @@ the remaining downloads, and any failure produces exit code 1.
 | `--ham10000` | [Kaggle: Skin Cancer MNIST: HAM10000](https://www.kaggle.com/datasets/kmader/skin-cancer-mnist-ham10000) | Full Kaggle dataset archive, including images and metadata |
 | `--scholarsmine` | [Dermatology Skin Lesion Image Analysis](https://scholarsmine.mst.edu/research_data/15/) | Three supplemental ZIPs: vignetting, hair/ruler, and ink mark masks for ISIC 2019; original ISIC images are separate |
 | `--dermartifactdb` | [Zenodo record 18324962](https://zenodo.org/records/18324962) | `DermArtifactDB.zip` (approximately 4.1 GB) |
+| `--ham10000-segmentations` | [Harvard Dataverse file 3838943](https://dataverse.harvard.edu/api/access/datafile/3838943) | `HAM10000_segmentations_lesion_tschandl.zip`, lesion masks (approximately 10 MB, MD5 checked) |
 | `--panderm` | [PanDerm (Google Drive via gdown)](https://github.com/SiyuanYan1/PanDerm) | `panderm_ll_data6_checkpoint-499.pth`, ViT-L/16 weights (approximately 1.4 GB) |
 
 The two public sources require no additional Python packages. HAM10000 uses the

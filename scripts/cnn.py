@@ -112,61 +112,70 @@ class SmallCNN(nn.Module):
 
 @torch.no_grad()
 def predict(model, loader, device):
-    """Class probabilities (N, 2) and embeddings (N, channels[-1]), in loader order."""
+    """Class probabilities (N, 2), embeddings (N, channels[-1]), and melanoma-minus-nevus
+    logit margins (N,), in loader order."""
     model.eval()
-    probs, embeddings = [], []
+    probs, embeddings, margins = [], [], []
     for x, _ in loader:
         z = model.embed(x.to(device))
-        probs.append(model.head(z).softmax(1).cpu())
+        logits = model.head(z)
+        probs.append(logits.softmax(1).cpu())
         embeddings.append(z.cpu())
-    return torch.cat(probs).numpy(), torch.cat(embeddings).numpy()
+        margins.append((logits[:, 1] - logits[:, 0]).cpu())
+    return torch.cat(probs).numpy(), torch.cat(embeddings).numpy(), torch.cat(margins).numpy()
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--epochs", type=int, default=40)
-    parser.add_argument("--lr", type=float, default=0.01)
-    parser.add_argument("--weight-decay", type=float, default=5e-4)
-    parser.add_argument("--workers", type=int, default=4, help="Ignored when images are cached in memory")
-    parser.add_argument("--size", type=int, default=224, help="Input height and width in pixels")
-    args = parser.parse_args()
+def pick_device():
+    return "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
-    torch.manual_seed(0)
-    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-    checkpoint = ROOT / "data" / "cnn" / f"{args.size}.pt"
-    resize, train_transform, eval_transform = transforms_for(args.size)
-    split = load_split()
-    labels = split["label"].to_numpy()
-    images = split["path"].tolist()
-    workers = args.workers
-    if args.size <= CACHE_MAX_SIZE:
-        # Small images fit in memory, and decoding the full JPEGs every epoch would dominate.
-        images = [resize(Image.open(path).convert("RGB")) for path in tqdm(images, desc="Caching resized images")]
-        workers = 0
 
-    def loader(rows, transform, shuffle=False):
-        rows = np.flatnonzero(rows)
-        dataset = Images([images[i] for i in rows], labels[rows], resize, transform)
-        return DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=shuffle, num_workers=workers,
-                          persistent_workers=workers > 0)
+def load_images(paths, size, workers):
+    """The images to train on and the DataLoader worker count to use.
 
-    train_loader = loader(split["split"] == "train", train_transform, shuffle=True)
-    val_rows = (split["split"] == "val").to_numpy()
-    val_loader = loader(val_rows, eval_transform)
+    Paths, or at sizes up to CACHE_MAX_SIZE, resized PIL images held in memory
+    (decoding the full JPEGs every epoch would otherwise dominate).
+    """
+    if size > CACHE_MAX_SIZE:
+        return paths, workers
+    resize = transforms_for(size)[0]
+    return [resize(Image.open(path).convert("RGB")) for path in tqdm(paths, desc="Caching resized images")], 0
+
+
+def make_loader(images, labels, size, transform, workers=0, shuffle=False):
+    dataset = Images(images, labels, transforms_for(size)[0], transform)
+    return DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=shuffle, num_workers=workers,
+                      persistent_workers=workers > 0)
+
+
+def train(images, labels, parts, size, checkpoint, epochs=40, lr=0.01, weight_decay=5e-4, workers=0, seed=0,
+          verbose=True):
+    """Train on the rows where parts == "train", choosing epoch and threshold on parts == "val".
+
+    images and labels cover every row (paths or PIL images from load_images). Saves
+    the best epoch's weights to checkpoint; returns (model with them loaded, best, history).
+    """
+    torch.manual_seed(seed)
+    device = pick_device()
+    _, train_transform, eval_transform = transforms_for(size)
+    train_rows, val_rows = np.flatnonzero(parts == "train"), np.flatnonzero(parts == "val")
+    train_loader = make_loader([images[i] for i in train_rows], labels[train_rows], size, train_transform, workers,
+                               shuffle=True)
+    val_loader = make_loader([images[i] for i in val_rows], labels[val_rows], size, eval_transform, workers)
     val_y = labels[val_rows]
 
-    model = SmallCNN(CHANNELS[:depth(args.size)]).to(device)
-    print(f"SmallCNN at {args.size}px: {len(model.features)} conv blocks, "
-          f"{sum(p.numel() for p in model.parameters()):,} parameters on {device}")
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs)
+    model = SmallCNN(CHANNELS[:depth(size)]).to(device)
+    if verbose:
+        print(f"SmallCNN at {size}px: {len(model.features)} conv blocks, "
+              f"{sum(p.numel() for p in model.parameters()):,} parameters on {device}")
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=weight_decay)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, epochs)
     # Weight each class by inverse frequency so melanoma counts as much as nevus.
-    train_y = torch.from_numpy(labels[(split["split"] == "train").to_numpy()])
+    train_y = torch.from_numpy(labels[train_rows])
     loss_fn = nn.CrossEntropyLoss(weight=(len(train_y) / (len(CLASSES) * torch.bincount(train_y).float())).to(device))
 
     best = {"val_macro_f1": -1.0}
     history = []
-    for epoch in range(args.epochs):
+    for epoch in range(epochs):
         model.train()
         total = 0.0
         for x, y in train_loader:
@@ -179,15 +188,36 @@ def main():
         scheduler.step()
         threshold, score = best_threshold(val_y, predict(model, val_loader, device)[0])
         history.append({"epoch": epoch, "train_loss": total / len(train_y), "val_macro_f1": score})
-        print(f"epoch {epoch}: train loss {total / len(train_y):.4f}, val macro F1 {score:.4f} "
-              f"(threshold {threshold:.2f})")
+        if verbose:
+            print(f"epoch {epoch}: train loss {total / len(train_y):.4f}, val macro F1 {score:.4f} "
+                  f"(threshold {threshold:.2f})")
         if score > best["val_macro_f1"]:
             best = {"val_macro_f1": score, "epoch": epoch, "threshold": threshold}
             checkpoint.parent.mkdir(parents=True, exist_ok=True)
             torch.save(model.state_dict(), checkpoint)
 
     model.load_state_dict(torch.load(checkpoint, map_location=device, weights_only=True))
-    probs, embeddings = predict(model, loader(np.ones(len(split), bool), eval_transform), device)
+    return model, best, history
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--epochs", type=int, default=40)
+    parser.add_argument("--lr", type=float, default=0.01)
+    parser.add_argument("--weight-decay", type=float, default=5e-4)
+    parser.add_argument("--workers", type=int, default=4, help="Ignored when images are cached in memory")
+    parser.add_argument("--size", type=int, default=224, help="Input height and width in pixels")
+    args = parser.parse_args()
+
+    split = load_split()
+    labels = split["label"].to_numpy()
+    images, workers = load_images(split["path"].tolist(), args.size, args.workers)
+    model, best, history = train(images, labels, split["split"].to_numpy(), args.size,
+                                 ROOT / "data" / "cnn" / f"{args.size}.pt", args.epochs, args.lr, args.weight_decay,
+                                 workers)
+    eval_transform = transforms_for(args.size)[2]
+    probs, embeddings, _ = predict(model, make_loader(images, labels, args.size, eval_transform, workers),
+                                   pick_device())
 
     out = FEATURES_DIR / "cnn" / f"{args.size}.npz"
     out.parent.mkdir(parents=True, exist_ok=True)
