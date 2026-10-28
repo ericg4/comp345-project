@@ -11,8 +11,9 @@ nevus vs. melanoma, then probe each model's features for artifacts.
 | `splits/ham10000_nv_vs_mel.csv` | Shared 70/15/15 split, grouped by lesion. Every arm uses it. |
 | `scripts/common.py` | Shared paths, split loading, and metrics. Every arm imports it. |
 | `scripts/make_splits.py` | Creates the split CSV. Already run; re-run only if all arms switch. |
-| `scripts/panderm_features.py` | Frozen PanDerm encoder, writes features to `data/features/panderm.npz` |
-| `scripts/linear_probe.py` | Trains a linear head on a features file, writes `results/<name>.json` |
+| `scripts/panderm_features.py` | Frozen PanDerm encoder, writes features to `data/features/panderm/pretrained.npz` |
+| `scripts/cnn.py` | Trains a small CNN from scratch (`--size` sets the input size), writes `results/cnn/<size>/` and its embeddings to `data/features/cnn/<size>.npz` |
+| `scripts/linear_probe.py` | Trains a linear head on a features file, writes `probe.json` to the matching folder (`data/features/a/b.npz` → `results/a/b/`) |
 | `scripts/train_smolvlm.py` | Trains language LoRA adapters with the original vocabulary head on the shared split |
 | `scripts/predict_smolvlm.py` | Predicts images using saved LoRA adapters, including the preserved Colab run |
 | `results/` | Results to commit: metrics, predictions, configuration, and split records |
@@ -32,13 +33,13 @@ uv run python scripts/download_datasets.py --ham10000 --panderm
 unzip -q data/ham10000/skin-cancer-mnist-ham10000.zip 'HAM10000_images_part_*' \
   HAM10000_metadata.csv -d data/ham10000/skin-cancer-mnist-ham10000
 uv run python scripts/panderm_features.py
-uv run python scripts/linear_probe.py data/features/panderm.npz
+uv run python scripts/linear_probe.py data/features/panderm/pretrained.npz
 ```
 
 Unzip only the upper-case image folders. The Kaggle archive also contains
 lower-case duplicates, which collide on case-insensitive filesystems such as macOS.
 
-`panderm_features.py --random-init` writes `panderm_random.npz`: the same
+`panderm_features.py --random-init` writes `panderm/random_init.npz`: the same
 ViT-L/16 without pretrained weights, a control showing how much pretraining adds.
 
 ## SmolVLM LoRA

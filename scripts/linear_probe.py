@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Train a linear head on saved features and evaluate it on the test split.
 
-    uv run python scripts/linear_probe.py data/features/panderm.npz
+    uv run python scripts/linear_probe.py data/features/panderm/pretrained.npz
 
 Mini-batch SGD (batch 64) on class-weighted cross-entropy (NLL). The learning
 rate, weight decay, epoch, and melanoma decision threshold are chosen by
-validation macro F1; test is scored once. Writes results/<features name>.json
-and per-image test predictions.
+validation macro F1; test is scored once. Writes probe.json and per-image test
+predictions to the results folder mirroring the features path
+(data/features/panderm/pretrained.npz -> results/panderm/pretrained/).
 """
 
 import argparse
@@ -18,7 +19,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from common import CLASSES, RESULTS_DIR, load_split, metrics
+from common import CLASSES, FEATURES_DIR, RESULTS_DIR, load_split, metrics
 
 LRS = [1e-3, 1e-2, 1e-1]
 # Strong values matter: 1024 features vs. ~800 training melanomas overfits easily.
@@ -86,14 +87,16 @@ def main():
         test_probs = head(test_x).softmax(1).numpy()
     test = metrics(test_y.numpy(), test_probs, best["threshold"])
 
-    name = args.features.stem
-    RESULTS_DIR.mkdir(exist_ok=True)
-    result = {"features": name, "chosen": best, "test": test,
+    features = args.features.resolve()
+    name = features.relative_to(FEATURES_DIR) if features.is_relative_to(FEATURES_DIR) else Path(features.name)
+    out = RESULTS_DIR / name.with_suffix("")
+    out.mkdir(parents=True, exist_ok=True)
+    result = {"features": str(name), "chosen": best, "test": test,
               "grid": [{k: v for k, v in run.items() if k != "weights"} for run in runs]}
-    (RESULTS_DIR / f"{name}.json").write_text(json.dumps(result, indent=2) + "\n")
+    (out / "probe.json").write_text(json.dumps(result, indent=2) + "\n")
     predictions = split[split["split"] == "test"][["image_id", "lesion_id", "label"]]
     predictions.assign(prob_mel=test_probs[:, 1], pred=(test_probs[:, 1] >= best["threshold"]).astype(int)).to_csv(
-        RESULTS_DIR / f"{name}_test_predictions.csv", index=False)
+        out / "probe_test_predictions.csv", index=False)
 
     print(f"\nChosen lr={best['lr']:g} wd={best['weight_decay']:g} threshold={best['threshold']:.2f}; "
           f"test: {json.dumps(test)}")

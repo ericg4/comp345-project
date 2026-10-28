@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """Train a small CNN from scratch on nevus vs. melanoma and save its embeddings.
 
-    uv run python scripts/cnn.py
-    uv run python scripts/linear_probe.py data/features/cnn.npz
+    uv run python scripts/cnn.py --size 28
+    uv run python scripts/linear_probe.py data/features/cnn/28.npz
 
-Four conv blocks, global average pooling to a 256-d embedding, then a two-layer
-head. Mini-batch SGD (batch 64) on class-weighted cross-entropy (NLL). The epoch
-and melanoma decision threshold are chosen by validation macro F1; test is scored
-once. Writes results/cnn_trained.json, per-image test predictions, the best
-weights to data/cnn/cnn.pt, and the 256-d embeddings of every split image to
-data/features/cnn.npz (split-CSV row order) for linear probing.
+Up to four conv blocks (four at 224px, three at 28px), global average pooling to
+an embedding (256-d at 224px, 128-d at 28px), then a two-layer head. Mini-batch
+SGD (batch 64) on class-weighted cross-entropy (NLL). The epoch and melanoma
+decision threshold are chosen by validation macro F1; test is scored once.
+Writes results/cnn/<size>/trained.json and per-image test predictions, the best
+weights to data/cnn/<size>.pt, and the embeddings of every split image to
+data/features/cnn/<size>.npz (split-CSV row order) for linear probing, whose
+results then land next to these in results/cnn/<size>/.
 """
 
 import argparse
@@ -21,40 +23,52 @@ from PIL import Image
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
+from tqdm import tqdm
 
 from common import CLASSES, FEATURES_DIR, RESULTS_DIR, ROOT, load_split, metrics
 from linear_probe import best_threshold
 
-CHECKPOINT = ROOT / "data" / "cnn" / "cnn.pt"
 BATCH_SIZE = 64
+CHANNELS = (32, 64, 128, 256)
+# At or below this size, every image is resized once up front and kept in memory.
+CACHE_MAX_SIZE = 64
 NORMALIZE = transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-# Same 224 crop as PanDerm. Training adds random crops and flips; no color jitter,
-# so color artifacts (ink, the red box) stay as available as they are in the data.
-TRAIN_TRANSFORM = transforms.Compose([
-    transforms.Resize(256),
-    transforms.RandomCrop(224),
-    transforms.RandomHorizontalFlip(),
-    transforms.RandomVerticalFlip(),
-    transforms.ToTensor(),
-    NORMALIZE,
-])
-EVAL_TRANSFORM = transforms.Compose([
-    transforms.Resize(256),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    NORMALIZE,
-])
+
+
+def transforms_for(size):
+    """(resize, train, eval) transforms for size x size inputs.
+
+    Resize the short side to 8/7 of size, then crop size x size: at 224 this is the
+    same 256 -> 224 crop as PanDerm, at 28 it is 32 -> 28. Training adds random
+    crops and flips; no color jitter, so color artifacts (ink, the red box) stay as
+    available as they are in the data.
+    """
+    resize = transforms.Resize(round(size * 256 / 224))
+    train = transforms.Compose([
+        transforms.RandomCrop(size),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomVerticalFlip(),
+        transforms.ToTensor(),
+        NORMALIZE,
+    ])
+    evaluate = transforms.Compose([transforms.CenterCrop(size), transforms.ToTensor(), NORMALIZE])
+    return resize, train, evaluate
 
 
 class Images(Dataset):
-    def __init__(self, paths, labels, transform):
-        self.paths, self.labels, self.transform = paths, labels, transform
+    """Images given as paths (loaded and resized per access) or as resized PIL images."""
+
+    def __init__(self, images, labels, resize, transform):
+        self.images, self.labels, self.resize, self.transform = images, labels, resize, transform
 
     def __len__(self):
-        return len(self.paths)
+        return len(self.images)
 
     def __getitem__(self, i):
-        return self.transform(Image.open(self.paths[i]).convert("RGB")), self.labels[i]
+        image = self.images[i]
+        if not isinstance(image, Image.Image):
+            image = self.resize(Image.open(image).convert("RGB"))
+        return self.transform(image), self.labels[i]
 
 
 def conv_block(c_in, c_out):
@@ -66,8 +80,17 @@ def conv_block(c_in, c_out):
     )
 
 
+def depth(size):
+    """Conv blocks for a size: up to four, keeping the last feature map at least 3x3."""
+    blocks = 0
+    while blocks < len(CHANNELS) and size // 2 >= 3:
+        size //= 2
+        blocks += 1
+    return blocks
+
+
 class SmallCNN(nn.Module):
-    def __init__(self, channels=(32, 64, 128, 256), hidden=128, dropout=0.3):
+    def __init__(self, channels=CHANNELS, hidden=128, dropout=0.3):
         super().__init__()
         widths = (3, *channels)
         self.features = nn.Sequential(*[conv_block(a, b) for a, b in zip(widths, widths[1:])])
@@ -80,7 +103,7 @@ class SmallCNN(nn.Module):
         )
 
     def embed(self, x):
-        """The pooled conv features (N, 256): what the linear probe reads."""
+        """The pooled conv features (N, channels[-1]): what the linear probe reads."""
         return self.pool(self.features(x)).flatten(1)
 
     def forward(self, x):
@@ -89,7 +112,7 @@ class SmallCNN(nn.Module):
 
 @torch.no_grad()
 def predict(model, loader, device):
-    """Class probabilities (N, 2) and embeddings (N, 256), in loader order."""
+    """Class probabilities (N, 2) and embeddings (N, channels[-1]), in loader order."""
     model.eval()
     probs, embeddings = [], []
     for x, _ in loader:
@@ -104,27 +127,37 @@ def main():
     parser.add_argument("--epochs", type=int, default=40)
     parser.add_argument("--lr", type=float, default=0.01)
     parser.add_argument("--weight-decay", type=float, default=5e-4)
-    parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--workers", type=int, default=4, help="Ignored when images are cached in memory")
+    parser.add_argument("--size", type=int, default=224, help="Input height and width in pixels")
     args = parser.parse_args()
 
     torch.manual_seed(0)
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+    checkpoint = ROOT / "data" / "cnn" / f"{args.size}.pt"
+    resize, train_transform, eval_transform = transforms_for(args.size)
     split = load_split()
-    paths, labels = split["path"].tolist(), split["label"].to_numpy()
+    labels = split["label"].to_numpy()
+    images = split["path"].tolist()
+    workers = args.workers
+    if args.size <= CACHE_MAX_SIZE:
+        # Small images fit in memory, and decoding the full JPEGs every epoch would dominate.
+        images = [resize(Image.open(path).convert("RGB")) for path in tqdm(images, desc="Caching resized images")]
+        workers = 0
 
     def loader(rows, transform, shuffle=False):
         rows = np.flatnonzero(rows)
-        images = Images([paths[i] for i in rows], labels[rows], transform)
-        return DataLoader(images, batch_size=BATCH_SIZE, shuffle=shuffle, num_workers=args.workers,
-                          persistent_workers=args.workers > 0)
+        dataset = Images([images[i] for i in rows], labels[rows], resize, transform)
+        return DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=shuffle, num_workers=workers,
+                          persistent_workers=workers > 0)
 
-    train_loader = loader(split["split"] == "train", TRAIN_TRANSFORM, shuffle=True)
+    train_loader = loader(split["split"] == "train", train_transform, shuffle=True)
     val_rows = (split["split"] == "val").to_numpy()
-    val_loader = loader(val_rows, EVAL_TRANSFORM)
+    val_loader = loader(val_rows, eval_transform)
     val_y = labels[val_rows]
 
-    model = SmallCNN().to(device)
-    print(f"SmallCNN: {sum(p.numel() for p in model.parameters()):,} parameters on {device}")
+    model = SmallCNN(CHANNELS[:depth(args.size)]).to(device)
+    print(f"SmallCNN at {args.size}px: {len(model.features)} conv blocks, "
+          f"{sum(p.numel() for p in model.parameters()):,} parameters on {device}")
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs)
     # Weight each class by inverse frequency so melanoma counts as much as nevus.
@@ -150,25 +183,26 @@ def main():
               f"(threshold {threshold:.2f})")
         if score > best["val_macro_f1"]:
             best = {"val_macro_f1": score, "epoch": epoch, "threshold": threshold}
-            CHECKPOINT.parent.mkdir(parents=True, exist_ok=True)
-            torch.save(model.state_dict(), CHECKPOINT)
+            checkpoint.parent.mkdir(parents=True, exist_ok=True)
+            torch.save(model.state_dict(), checkpoint)
 
-    model.load_state_dict(torch.load(CHECKPOINT, map_location=device, weights_only=True))
-    probs, embeddings = predict(model, loader(np.ones(len(split), bool), EVAL_TRANSFORM), device)
+    model.load_state_dict(torch.load(checkpoint, map_location=device, weights_only=True))
+    probs, embeddings = predict(model, loader(np.ones(len(split), bool), eval_transform), device)
 
-    out = FEATURES_DIR / "cnn.npz"
+    out = FEATURES_DIR / "cnn" / f"{args.size}.npz"
     out.parent.mkdir(parents=True, exist_ok=True)
     np.savez(out, features=embeddings, image_ids=split["image_id"].to_numpy(dtype=str))
 
     test_rows = (split["split"] == "test").to_numpy()
     test_probs = probs[test_rows]
     test = metrics(labels[test_rows], test_probs, best["threshold"])
-    RESULTS_DIR.mkdir(exist_ok=True)
+    results = RESULTS_DIR / "cnn" / str(args.size)
+    results.mkdir(parents=True, exist_ok=True)
     result = {"model": "cnn", "args": vars(args), "chosen": best, "test": test, "history": history}
-    (RESULTS_DIR / "cnn_trained.json").write_text(json.dumps(result, indent=2) + "\n")
+    (results / "trained.json").write_text(json.dumps(result, indent=2) + "\n")
     predictions = split[test_rows][["image_id", "lesion_id", "label"]]
     predictions.assign(prob_mel=test_probs[:, 1], pred=(test_probs[:, 1] >= best["threshold"]).astype(int)).to_csv(
-        RESULTS_DIR / "cnn_trained_test_predictions.csv", index=False)
+        results / "trained_test_predictions.csv", index=False)
 
     print(f"\nChose epoch {best['epoch']}, threshold {best['threshold']:.2f}; saved {embeddings.shape} to {out}; "
           f"test: {json.dumps(test)}")

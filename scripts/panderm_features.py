@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Run the frozen PanDerm ViT-L/16 encoder over every split image and save its features.
 
-Saves data/features/panderm.npz (or panderm_random.npz with --random-init, a
-no-pretraining control): `features` (N, 1024) in split-CSV row order, plus `image_ids`.
+Saves data/features/panderm/pretrained.npz (or random_init.npz with --random-init,
+a no-pretraining control): `features` (N, 1024) in split-CSV row order, plus `image_ids`.
 Preprocessing and the feature (final-norm CLS token) match PanDerm's own linear probe.
 """
 
@@ -72,7 +72,7 @@ def main():
     features = [model.forward_features(batch.to(device), is_train=False).cpu() for batch in tqdm(loader)]
     features = torch.cat(features).numpy()
 
-    out = FEATURES_DIR / ("panderm_random.npz" if args.random_init else "panderm.npz")
+    out = FEATURES_DIR / "panderm" / ("random_init.npz" if args.random_init else "pretrained.npz")
     out.parent.mkdir(parents=True, exist_ok=True)
     np.savez(out, features=features, image_ids=split["image_id"].to_numpy(dtype=str))
     print(f"Saved {features.shape} to {out}")
