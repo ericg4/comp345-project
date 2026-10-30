@@ -1,6 +1,0 @@
-{
-  "elapsed_seconds": 649.9206852912903,
-  "gpu": "Tesla T4",
-  "features": "data/features/smolvlm_lora.npz",
-  "cohort": "results/ham10000_lora/split.csv"
-}

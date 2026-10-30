@@ -1,7 +1,7 @@
 [project]
 name = "shortcut-learning-project"
 version = "0.1.0"
-description = "Shortcut learning in skin lesion classifiers: CNN vs. PanDerm vs. VLM"
+description = "Do skin lesion classifiers rely on artifact shortcuts? CNN vs. PanDerm vs. SmolVLM"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -11,6 +11,7 @@ dependencies = [
     "pandas",
     "pillow",
     "scikit-learn",
+    "scipy",
     "torch",
     "torchvision",
     # Pinned to the version PanDerm's classification code was written against.
@@ -25,6 +26,7 @@ vlm = [
     "accelerate==1.11.0",
     "safetensors==0.6.2",
 ]
+demo = ["jupyter", "matplotlib"]
 
 [tool.uv]
 package = false
