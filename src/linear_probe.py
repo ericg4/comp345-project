@@ -32,9 +32,9 @@ def best_threshold(labels, probs):
     return float(THRESHOLDS[np.argmax(scores)]), max(scores)
 
 
-def train(x, y, val_x, val_y, lr, weight_decay):
+def train(x, y, val_x, val_y, lr, weight_decay, seed=0):
     """Return (val macro F1, epoch, threshold, weights) at the best validation epoch."""
-    torch.manual_seed(0)
+    torch.manual_seed(seed)
     head = nn.Linear(x.shape[1], len(CLASSES))
     optimizer = torch.optim.SGD(head.parameters(), lr=lr, momentum=0.9, weight_decay=weight_decay)
     # Weight each class by inverse frequency so melanoma counts as much as nevus.

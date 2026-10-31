@@ -22,6 +22,7 @@ only the files in `demo/`.
 | Experiment | Finding |
 | --- | --- |
 | [Planted ink shortcut, CNN](results/cnn/28/ink_shortcut/) | When 90% of training melanomas (and 10% of nevi) carry ink, the CNN uses it: without ink, melanoma recall falls from 0.66 to 0.37. |
+| [Planted ink shortcut, PanDerm probe](results/panderm/pretrained/ink_shortcut/) | Same setup: the frozen-PanDerm probe takes the shortcut already at 70/30, and at 90/10 its clean melanoma recall falls to 0.26. |
 | [Ink/ruler insertion, SmolVLM](results/smolvlm_artifact_insertion/) | Ink placed beside the lesion drops melanoma recall from 0.83 to 0.29. |
 | [Artifact probes, SmolVLM](results/smolvlm_artifact_probes/) | Hair (AUROC 0.87) and rulers (0.93) are linearly decodable from its decision feature. |
 | [Artifact removal, SmolVLM](results/smolvlm_mask_ablation/) | Inpainting hair/ruler regions costs 4.0 pp accuracy beyond a same-area control. |
@@ -44,7 +45,8 @@ three SmolVLM artifact studies are not in this repo; only their results are.
 | `src/linear_probe.py` | Trains a linear head on saved features |
 | `src/smolvlm.py` | SmolVLM LoRA training and prediction |
 | `src/artifacts.py` | Synthetic ink and ruler overlays |
-| `src/ink_shortcut.py` | Planted ink shortcut experiment |
+| `src/ink_shortcut.py` | Planted ink shortcut experiment (CNN) |
+| `src/panderm_ink_shortcut.py` | The same experiment for the PanDerm linear probe |
 | `results/` | Metrics and test predictions for every experiment |
 | `third_party/PanDerm/` | PanDerm model code (git submodule) |
 
@@ -68,5 +70,6 @@ uv run python src/linear_probe.py data/features/cnn/28.npz
 uv run python src/panderm.py                            # --random-init for the control
 uv run python src/linear_probe.py data/features/panderm/pretrained.npz
 uv run python src/ink_shortcut.py                       # about 10 min on Apple MPS
+uv run python src/panderm_ink_shortcut.py               # about 30 min on Apple MPS
 uv sync --extra vlm && uv run python src/smolvlm.py train   # CUDA GPU
 ```
