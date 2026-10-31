@@ -9,6 +9,33 @@ see how their predictions change.
 **Start with [`00_demo.ipynb`](00_demo.ipynb).** It runs on CPU in seconds using
 only the files in `demo/`.
 
+## Running the demo
+
+The demo needs [uv](https://docs.astral.sh/uv/) and nothing else: no dataset
+download, no PanDerm weights, no GPU, and no `git submodule` step. From the repo root:
+
+```sh
+uv sync --extra demo
+uv run jupyter notebook 00_demo.ipynb    # or: uv run jupyter lab
+```
+
+Then run all cells (Kernel → Restart & Run All). The notebook loads files by
+relative path, so start Jupyter from the repo root. In VS Code, pick the
+`.venv` interpreter created by `uv sync` as the kernel. To run it without a browser:
+
+```sh
+uv run --extra demo jupyter nbconvert --to notebook --execute 00_demo.ipynb --output 00_demo.ipynb
+```
+
+What it does:
+
+1. **Live:** the 28px CNN classifies 6 test images (`demo/images/`, `demo/samples.csv`).
+2. **Live:** synthetic ink is stamped beside each lesion, and the images are classified
+   again by the normal CNN and by a CNN trained with a 90/10 ink bias
+   (`demo/weights/`).
+3. **Cached:** PanDerm and SmolVLM results are read from `results/`; those models
+   are not run.
+
 ## Results so far
 
 | Model (clean test split) | Macro-F1 | AUROC |
